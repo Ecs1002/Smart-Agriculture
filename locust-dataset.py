@@ -1,13 +1,13 @@
 import pandas as pd
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from sklearn.externals import joblib
+import time
 
 # Load your dataset
-csv_file_path = r'C:\Users\deepa\Downloads\locust.csv'
+csv_file_path = r'C:\Users\Downloads\locust.csv'
 df = pd.read_csv(csv_file_path)
 
 # Extract pixel values and labels
@@ -25,35 +25,18 @@ y_binary = (y == 'Y').astype(int)
 # Split the dataset into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y_binary, test_size=0.2, random_state=42)
 
-# Build the neural network model
-model = Sequential()
-model.add(Dense(128, input_dim=X_train.shape[1], activation='relu'))
-model.add(Dense(64, activation='relu'))
-model.add(Dense(1, activation='sigmoid'))
-
-# Compile the model
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-
-# Define callbacks for training
-early_stopping = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
-model_checkpoint = ModelCheckpoint('best_model.h5', save_best_only=True)
+# Build the neural network model using scikit-learn MLPClassifier
+model = MLPClassifier(hidden_layer_sizes=(128, 64), activation='relu', max_iter=30, random_state=42)
 
 # Train the model
-history = model.fit(
-    X_train, y_train,
-    epochs=30,  # Increase the number of epochs if needed
-    batch_size=32,
-    validation_data=(X_test, y_test),
-    callbacks=[early_stopping, model_checkpoint]
-)
+model.fit(X_train, y_train)
 
 # Evaluate the model on the test set
-loss, accuracy = model.evaluate(X_test, y_test)
-print(f'Test Loss: {loss:.4f}, Test Accuracy: {accuracy:.4f}')
+accuracy = model.score(X_test, y_test)
+print(f'Test Accuracy: {accuracy:.4f}')
 
 # Predictions on the test set
-y_pred = model.predict(X_test)
-y_pred_binary = (y_pred > 0.5).astype(int)
+y_pred_binary = model.predict(X_test)
 
 # Confusion Matrix
 conf_matrix = confusion_matrix(y_test, y_pred_binary)
@@ -66,14 +49,27 @@ print("Classification Report:")
 print(class_report)
 
 # Save the trained model for future use (e.g., deployment)
-model.save('locust_detection_model.h5')
+joblib.dump(model, 'locust_detection_model.pkl')
 
 # Additional Steps:
+
 # 2. Implement model deployment for making predictions on new data
-#    (this involves loading the saved model and providing new input data)
+# Load the saved model and provide new input data
+loaded_model = joblib.load('locust_detection_model.pkl')
+new_data = ...  # Provide new input data as a NumPy array
+new_data_scaled = scaler.transform(new_data)
+new_predictions = loaded_model.predict(new_data_scaled)
+print("New Predictions:", new_predictions)
 
 # 3. Monitor the model's performance over time and retrain as needed
-#    (especially if the model is deployed in a real-world scenario)
+# For demonstration purposes, let's simulate monitoring over time
+for epoch in range(10):
+    time.sleep(1)  # Simulating a time interval (e.g., 1 second)
+    # Monitor the model's performance and decide whether to retrain
+    # For simplicity, let's retrain every 3 epochs
+    if epoch % 3 == 0:
+        print(f"Retraining the model at epoch {epoch}...")
+        # Retrain the model (you can use the same code as above for training)
 
 # 4. Consider techniques for interpreting or explaining model predictions
-#    (e.g., SHAP, LIME) for better understanding and transparency.
+# (e.g., SHAP, LIME) for better understanding and transparency.
