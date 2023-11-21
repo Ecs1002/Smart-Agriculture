@@ -20,7 +20,7 @@ import os.path
 
 BATCH_SIZE = 32
 IMAGE_SIZE = (320, 320)
-dataset_path = r'C:\Users\deepa\Downloads\locust_pics'
+dataset_path = r'C:\Users\Downloads\locust_pics'
 
 image_dir = Path(dataset_path)
 
