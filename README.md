@@ -5,3 +5,6 @@ Documentation Link: https://docs.google.com/document/d/1C9vEM_gjk17qF0lTpj7M5Xfr
 
 ## Dataset we've used
 https://www.kaggle.com/datasets/abhinandanroul/pest-normalized
+
+## Check this out in Kaggle
+https://www.kaggle.com/code/harshithasudhakar/locust-detection/notebook
