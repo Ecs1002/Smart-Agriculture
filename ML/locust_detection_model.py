@@ -16,13 +16,14 @@ import os.path
 
 BATCH_SIZE = 32
 IMAGE_SIZE = (224, 224)
-dataset_path = r'C:\Users\Downloads\locust_pics'
+dataset_path = r'C:\Users\deepa\Downloads\locust_pics'
 
 image_dir = Path(dataset_path)
 
 # Get filepaths and labels
 print("Getting filepaths and labels...")
 filepaths = list(image_dir.glob(r'**/*.JPG')) + list(image_dir.glob(r'**/*.jpeg')) + list(image_dir.glob(r'**/*.png'))
+print("Filepaths and labels retrieved successfully.")
 
 # Check if any files were found
 if not filepaths:
@@ -33,16 +34,19 @@ else:
 labels = list(map(lambda x: os.path.split(os.path.split(x)[0])[1], filepaths))
 
 # Convert filepaths and labels to pandas Series
+print("Converting filepaths and labels to pandas Series...")
 filepaths_series = pd.Series(filepaths, name='Filepath')
 labels_series = pd.Series(labels, name='Label')
+print("Filepaths and labels converted to pandas Series successfully.")
 
 # Concatenate filepaths and labels
 print("Concatenating filepaths and labels...")
 image_df = pd.concat([filepaths_series, labels_series], axis=1)
 
-print(len(list(image_dir.glob(r'**/*.jpeg'))))
+# print(len(list(image_dir.glob(r'**/*.jpeg'))))
 
 image_df
+print("Filepaths and labels concatenated successfully.")
 
 # Display 16 pictures of the dataset with their labels
 random_index = np.random.randint(0, len(image_df), 16)
@@ -68,6 +72,7 @@ print("Labels encoded successfully.")
 # Save the LabelEncoder
 print("Saving the LabelEncoder...")
 joblib.dump(label_encoder, 'label_encoder.pkl')
+print("LabelEncoder saved successfully.")
 
 # Prepare features and labels
 print("Preparing features and labels...")
@@ -75,9 +80,29 @@ X_train = np.array([np.array(Image.open(filepath).convert('RGB').resize(IMAGE_SI
 y_train = train_df['Label']
 
 X_test = np.array([np.array(Image.open(filepath).resize(IMAGE_SIZE)) for filepath in test_df['Filepath']])
+print("Features and labels prepared successfully.")
+
+# Define the parameter grid
+param_grid = {
+    'n_estimators': [100, 200, 300, 400, 500],
+    'max_depth': [None, 10, 20, 30, 40, 50],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4],
+}
 
 # Create a RandomForestClassifier
+print("Creating a RandomForestClassifier...")
 model = RandomForestClassifier(n_estimators=100)
+print("RandomForestClassifier created successfully.")
+
+# Create the GridSearchCV object
+grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=3, n_jobs=-1)
+
+# Fit the GridSearchCV object to the data
+grid_search.fit(X_train.reshape(X_train.shape[0], -1), y_train)
+
+# Print the best parameters
+print(grid_search.best_params_)
 
 # Train the model
 print("Training the model...")
@@ -92,6 +117,12 @@ y_test = test_df['Label']  # Define y_test
 
 print(classification_report(y_test, y_pred))
 print("Model evaluated successfully.")
+
+# Flatten the data
+X_train_flat = X_train.reshape(X_train.shape[0], -1)
+
+# Fit the GridSearchCV object to the data
+grid_search.fit(X_train_flat, y_train)
 
 if os.access(os.getcwd(), os.W_OK):
     print("You have write permission for this directory.")
