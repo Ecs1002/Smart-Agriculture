@@ -16,8 +16,8 @@ import os.path
 
 BATCH_SIZE = 32
 IMAGE_SIZE = (224, 224)
-dataset_path = '/kaggle/input/pest-normalized'
 
+dataset_path = r'C:\Users\deepa\Downloads\locust_pics'
 image_dir = Path(dataset_path)
 
 # Get filepaths and labels
@@ -42,19 +42,10 @@ print("Concatenating filepaths and labels...")
 image_df = pd.concat([filepaths_series, labels_series], axis=1)
 print("Filepaths and labels concatenated successfully.")
 
-# Display 16 pictures of the dataset with their labels
-random_index = np.random.randint(0, len(image_df), 16)
-fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(10, 10),
-                        subplot_kw={'xticks': [], 'yticks': []})
-
-for i, ax in enumerate(axes.flat):
-    image = Image.open(image_df.Filepath[random_index[i]])
-    ax.imshow(image)
-    ax.set_title(image_df.Label[random_index[i]])
-plt.tight_layout()
-plt.show()
-
+# Splitting dataset into train and test sets
+print("Splitting dataset into train and test sets...")
 train_df, test_df = train_test_split(image_df, test_size=0.2, shuffle=True, random_state=42)
+print("Dataset split successfully.")
 
 # Encode labels
 print("Encoding labels...")
