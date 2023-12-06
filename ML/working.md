@@ -77,3 +77,16 @@ The result is a DataFrame where each row corresponds to an image, with one colum
 
 This DataFrame is stored in the `image_df` variable.
 
+## Splitting dataset into train and test sets
+```
+train_df, test_df = train_test_split(image_df, test_size=0.2, shuffle=True, random_state=42)
+```
+This line uses the `train_test_split` function from the `sklearn.model_selection` module to split the `image_df` DataFrame into a training set and a test set.
+
+The `test_size=0.2` parameter specifies that 20% of the data should be reserved for the test set. The remaining 80% of the data will form the training set.
+
+The `shuffle=True` parameter indicates that the data should be shuffled before splitting. This is important to ensure that the training and test sets are representative of the overall distribution of the data, especially if the data is ordered or grouped in a certain way.
+
+The `random_state=42` parameter is used to set the seed for the random number generator, which is used for shuffling the data. Setting the seed to a fixed number ensures that the output of the function is deterministic, meaning that it will produce the same split each time it is run with the same input data and the same seed.
+
+The output of the `train_test_split` function is a tuple of two DataFrames. The first DataFrame `(train_df)` is the training set, and the second DataFrame `(test_df)` is the test set.
