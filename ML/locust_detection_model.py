@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report
-from sklearn.model_selection import GridSearchCV, train_test_split
-from skimage.feature import hog
-from skimage import exposure
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
+import matplotlib.image as mpimg
 import joblib
 
 # System libraries
@@ -16,7 +16,6 @@ import os.path
 
 BATCH_SIZE = 32
 IMAGE_SIZE = (224, 224)
-
 dataset_path = r'C:\Users\deepa\Downloads\locust_pics'
 image_dir = Path(dataset_path)
 
@@ -42,12 +41,8 @@ print("Filepaths and labels converted to pandas Series successfully.")
 # Concatenate filepaths and labels
 print("Concatenating filepaths and labels...")
 image_df = pd.concat([filepaths_series, labels_series], axis=1)
-print("Filepaths and labels concatenated successfully.")
-
-# Splitting dataset into train and test sets
-print("Splitting dataset into train and test sets...")
 train_df, test_df = train_test_split(image_df, test_size=0.2, shuffle=True, random_state=42)
-print("Dataset split successfully.")
+print("Filepaths and labels concatenated successfully.")
 
 # Encode labels
 print("Encoding labels...")
@@ -61,69 +56,53 @@ print("Saving the LabelEncoder...")
 joblib.dump(label_encoder, 'label_encoder.pkl')
 print("LabelEncoder saved successfully.")
 
-# Function to extract HOG features from an image
-print("Defining function to extract HOG features from an image...")
-def extract_hog_features(image_path):
-    img = Image.open(image_path).convert('L')  # Convert to grayscale
-    img = img.resize(IMAGE_SIZE)
-    img_array = np.array(img)
-    
-    # Calculate HOG features and return flattened array
-    features, _ = hog(img_array, pixels_per_cell=(8, 8), cells_per_block=(1, 1), visualize=True)
-    return features
-print("Function defined successfully.")
+# Prepare features and labels
+print("Preparing features and labels...")
+X_train = np.array([np.array(Image.open(filepath).convert('RGB').resize(IMAGE_SIZE)) for filepath in train_df['Filepath']])
+y_train = train_df['Label']
 
-# Extract HOG features for training data
-print("Extracting HOG features for training data...")
-X_train = np.array([extract_hog_features(filepath) for filepath in train_df['Filepath']])
-print("HOG features extracted for training data.")
+X_test = np.array([np.array(Image.open(filepath).resize(IMAGE_SIZE)) for filepath in test_df['Filepath']])
+print("Features and labels prepared successfully.")
 
-# Extract HOG features for test data
-print("Extracting HOG features for test data...")
-X_test = np.array([extract_hog_features(filepath) for filepath in test_df['Filepath']])
-print("HOG features extracted for test data.")
+# Create a RandomForestClassifier
+print("Creating a RandomForestClassifier...")
+model = RandomForestClassifier(n_estimators=100)
+print("RandomForestClassifier created successfully.")
 
-# Define the parameter grid
-print("Defining the parameter grid...")
-param_grid = {
-    'n_estimators': [100, 200, 300],
-    'max_depth': [None, 10, 20, 30],
-    'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4],
-}
-print("Parameter grid defined successfully.")
-
-# Create a Random Forest classifier
-print("Creating a Random Forest classifier...")
-model = RandomForestClassifier()
-print("Random Forest classifier created successfully.")
-
-# Create the GridSearchCV object
-print("Creating the GridSearchCV object...")
-grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=3, n_jobs=-1)
-print("GridSearchCV object created successfully.")
-
-# Fit the GridSearchCV object to the datas
-print("Fitting GridSearchCV object to the data...")
-grid_search.fit(X_train, train_df['Label'])
-print("GridSearchCV object fitted successfully.")
-
-# Print the best parameters
-print("Best parameters:")
-print(grid_search.best_params_)
+# Train the model
+print("Training the model...")
+model.fit(X_train.reshape(X_train.shape[0], -1), y_train)
+print("Model trained successfully.")
 
 # Evaluate the model
 print("Evaluating the model...")
-y_pred = grid_search.predict(X_test)
+y_pred = model.predict(X_test.reshape(X_test.shape[0], -1))
 
 y_test = test_df['Label']  # Define y_test
 
 print(classification_report(y_test, y_pred))
 print("Model evaluated successfully.")
 
+def predict_insect(image_path):
+    # Load and preprocess the image
+    print("Loading and preprocessing the image...")
+    img = Image.open(image_path).convert('RGB').resize((224, 224))  # resize to (224, 224)
+    img_array = np.array(img).reshape(1, -1)
+    print("Image loaded and preprocessed successfully.")
+
+    # Use the model to predict the class of the image
+    print("Predicting the class of the image...")
+    pred = model.predict(img_array)
+    print("Class of the image predicted successfully.")
+
+    # Convert the predicted class back to the original label
+    print("Converting the predicted class back to the original label...")
+    pred_label = label_encoder.inverse_transform(pred)
+    print("Predicted class converted successfully.")
+    
+    return pred_label[0]
+
 # Save the model
 print("Saving the model...")
-# Save the best estimator from the grid search
-best_estimator = grid_search.best_estimator_
-joblib.dump(best_estimator, 'model.pkl')
-print("Model saved as 'model.pkl' successfully.")
+filename = joblib.dump(model, 'model.pkl')
+print(f"Model saved as {filename}")
