@@ -26,10 +26,12 @@ filepaths = list(image_dir.glob(r'**/*.JPG')) + list(image_dir.glob(r'**/*.jpeg'
 print("Filepaths and labels retrieved successfully.")
 
 # Check if any files were found
+print("Checking if any files were found...")
 if not filepaths:
     print(f"No image files found in directory {image_dir}")
 else:
     labels = list(map(lambda x: os.path.split(os.path.split(x)[0])[1], filepaths))
+print("Files checked successfully.")
 
 # Convert filepaths and labels to pandas Series
 print("Converting filepaths and labels to pandas Series...")
@@ -60,6 +62,7 @@ joblib.dump(label_encoder, 'label_encoder.pkl')
 print("LabelEncoder saved successfully.")
 
 # Function to extract HOG features from an image
+print("Defining function to extract HOG features from an image...")
 def extract_hog_features(image_path):
     img = Image.open(image_path).convert('L')  # Convert to grayscale
     img = img.resize(IMAGE_SIZE)
@@ -68,6 +71,7 @@ def extract_hog_features(image_path):
     # Calculate HOG features and return flattened array
     features, _ = hog(img_array, pixels_per_cell=(8, 8), cells_per_block=(1, 1), visualize=True)
     return features
+print("Function defined successfully.")
 
 # Extract HOG features for training data
 print("Extracting HOG features for training data...")
@@ -80,12 +84,14 @@ X_test = np.array([extract_hog_features(filepath) for filepath in test_df['Filep
 print("HOG features extracted for test data.")
 
 # Define the parameter grid
+print("Defining the parameter grid...")
 param_grid = {
     'n_estimators': [100, 200, 300],
     'max_depth': [None, 10, 20, 30],
     'min_samples_split': [2, 5, 10],
     'min_samples_leaf': [1, 2, 4],
 }
+print("Parameter grid defined successfully.")
 
 # Create a Random Forest classifier
 print("Creating a Random Forest classifier...")
@@ -93,14 +99,17 @@ model = RandomForestClassifier()
 print("Random Forest classifier created successfully.")
 
 # Create the GridSearchCV object
+print("Creating the GridSearchCV object...")
 grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=3, n_jobs=-1)
+print("GridSearchCV object created successfully.")
 
-# Fit the GridSearchCV object to the data
+# Fit the GridSearchCV object to the datas
 print("Fitting GridSearchCV object to the data...")
 grid_search.fit(X_train, train_df['Label'])
 print("GridSearchCV object fitted successfully.")
 
 # Print the best parameters
+print("Best parameters:")
 print(grid_search.best_params_)
 
 # Evaluate the model
@@ -114,5 +123,7 @@ print("Model evaluated successfully.")
 
 # Save the model
 print("Saving the model...")
-filename = joblib.dump(grid_search, 'model.pkl')
-print(f"Model saved as {filename}")
+# Save the best estimator from the grid search
+best_estimator = grid_search.best_estimator_
+joblib.dump(best_estimator, 'model.pkl')
+print("Model saved as 'model.pkl' successfully.")
