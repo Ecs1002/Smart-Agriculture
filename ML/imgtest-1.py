@@ -27,7 +27,7 @@ def predict_insect(image_path):
 print("Current working directory:", os.getcwd())
 
 # List of image paths to test
-image_paths_to_test = ['C:/Users/deepa/Downloads/locust_test_img1.png', 'C:/Users/deepa/Downloads/locust_test_img2.png', 'C:/Users/deepa/Downloads/test_img3.jpeg']
+image_paths_to_test = ['C:/Users/Downloads/locust_test_img1.png', 'C:/Users/Downloads/locust_test_img2.png', 'C:/Users/Downloads/test_img3.jpeg']
 
 # Test the predict_insect function for each image
 for image_path in image_paths_to_test:
